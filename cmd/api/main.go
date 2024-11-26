@@ -1,6 +1,9 @@
 package main
 
 import (
+	"log"
+
+	"github.com/Gulshan256/social/internal/db"
 	"github.com/Gulshan256/social/internal/env"
 	"github.com/Gulshan256/social/internal/store"
 )
@@ -18,7 +21,22 @@ func main() {
 			maxConnLifetime: env.GetDuration("DB_MAX_CONN_LIFETIME", 60),
 		},
 	}
-	store := store.NewStorage(nil)
+
+	db, err := db.NewDB(
+		cnf.db.dsn,
+		cnf.db.ssl,
+		cnf.db.maxOpenConns,
+		cnf.db.maxIdleConns,
+		cnf.db.maxConnLifetime,
+		cnf.db.maxIdleTime,
+	)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	log.Println("Database connection successful")
+
+	store := store.NewStorage(db)
 
 	app := &appplication{
 		config: cnf,
